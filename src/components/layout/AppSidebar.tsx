@@ -34,25 +34,26 @@ interface NavItem {
   id: AppPage;
   label: string;
   icon: React.ElementType;
+  requiredPermission: string;
 }
 
 const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'pos', label: 'POS Terminal', icon: ShoppingCart },
-  { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'products', label: 'Products', icon: Tag },
-  { id: 'customers', label: 'Customers', icon: Users },
-  { id: 'suppliers', label: 'Suppliers', icon: Truck },
-  { id: 'employees', label: 'Employees', icon: UserCog },
-  { id: 'users', label: 'Users & Roles', icon: Shield },
-  { id: 'transactions', label: 'Transactions', icon: Receipt },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, requiredPermission: 'dashboard.view' },
+  { id: 'pos', label: 'POS Terminal', icon: ShoppingCart, requiredPermission: 'pos.access' },
+  { id: 'inventory', label: 'Inventory', icon: Package, requiredPermission: 'inventory.view' },
+  { id: 'products', label: 'Products', icon: Tag, requiredPermission: 'inventory.view' },
+  { id: 'customers', label: 'Customers', icon: Users, requiredPermission: 'customers.view' },
+  { id: 'suppliers', label: 'Suppliers', icon: Truck, requiredPermission: 'suppliers.view' },
+  { id: 'employees', label: 'Employees', icon: UserCog, requiredPermission: 'employees.view' },
+  { id: 'users', label: 'Users & Roles', icon: Shield, requiredPermission: 'users.view' },
+  { id: 'transactions', label: 'Transactions', icon: Receipt, requiredPermission: 'transactions.view' },
+  { id: 'reports', label: 'Reports', icon: BarChart3, requiredPermission: 'reports.view' },
+  { id: 'settings', label: 'Settings', icon: Settings, requiredPermission: 'settings.view' },
 ];
 
 export default function AppSidebar() {
   const { currentPage, setPage, sidebarCollapsed, toggleCollapsed, sidebarOpen } = useNavStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, hasPermission } = useAuthStore();
 
   const userInitials = user?.name ? getInitials(user.name) : 'U';
 
@@ -67,6 +68,21 @@ export default function AppSidebar() {
     };
     return map[user.role] || user.role;
   })();
+
+  const roleColor = (() => {
+    if (!user?.role) return '';
+    const map: Record<string, string> = {
+      super_admin: 'text-red-600 dark:text-red-400',
+      admin: 'text-amber-600 dark:text-amber-400',
+      manager: 'text-blue-600 dark:text-blue-400',
+      cashier: 'text-emerald-600 dark:text-emerald-400',
+      viewer: 'text-gray-600 dark:text-gray-400',
+    };
+    return map[user.role] || '';
+  })();
+
+  // Filter nav items based on user permissions
+  const visibleNavItems = navItems.filter((item) => hasPermission(item.requiredPermission));
 
   return (
     <aside
@@ -95,7 +111,7 @@ export default function AppSidebar() {
       {/* Navigation */}
       <ScrollArea className="flex-1 py-3">
         <nav className="flex flex-col gap-1 px-3" role="navigation" aria-label="Main navigation">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = currentPage === item.id;
             const Icon = item.icon;
 
@@ -182,7 +198,7 @@ export default function AppSidebar() {
             <div className="flex flex-1 items-center justify-between overflow-hidden">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">{user?.name || 'User'}</p>
-                <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+                <p className={cn('truncate text-xs font-medium', roleColor)}>{roleLabel}</p>
               </div>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>

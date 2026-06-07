@@ -82,7 +82,7 @@ function getNotificationIcon(type: string) {
 
 export default function AppHeader() {
   const { currentPage, toggleSidebar } = useNavStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, hasPermission } = useAuthStore();
   const { notifications, markRead, markAllRead } = useNotificationStore();
   const { business, currentBranchId, setCurrentBranch } = useBusinessStore();
   const { theme, setTheme } = useTheme();
@@ -113,29 +113,38 @@ export default function AppHeader() {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Branch selector */}
-      <div className="hidden sm:block">
-        <Select value={currentBranchId} onValueChange={setCurrentBranch}>
-          <SelectTrigger className="h-9 w-[200px] gap-2 text-sm" size="sm">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Select branch" />
-          </SelectTrigger>
-          <SelectContent>
-            {activeBranches.map((branch) => (
-              <SelectItem key={branch.id} value={branch.id}>
-                <span className="flex items-center gap-2">
-                  {branch.isHeadOffice && (
-                    <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                      HQ
-                    </Badge>
-                  )}
-                  {branch.name}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Branch selector - only for admin/super_admin who can switch branches */}
+      {(user?.role === 'super_admin' || user?.role === 'admin') && (
+        <div className="hidden sm:block">
+          <Select value={currentBranchId} onValueChange={setCurrentBranch}>
+            <SelectTrigger className="h-9 w-[200px] gap-2 text-sm" size="sm">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <SelectValue placeholder="Select branch" />
+            </SelectTrigger>
+            <SelectContent>
+              {activeBranches.map((branch) => (
+                <SelectItem key={branch.id} value={branch.id}>
+                  <span className="flex items-center gap-2">
+                    {branch.isHeadOffice && (
+                      <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                        HQ
+                      </Badge>
+                    )}
+                    {branch.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {/* Branch indicator for other roles */}
+      {user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branchName && (
+        <div className="hidden sm:flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-sm text-muted-foreground">
+          <Building2 className="h-3.5 w-3.5" />
+          <span>{user.branchName}</span>
+        </div>
+      )}
 
       {/* Notifications */}
       <Popover open={notifOpen} onOpenChange={setNotifOpen}>

@@ -3,32 +3,27 @@
 import { create } from 'zustand';
 import type {
   AppPage, AuthUser, CartItem, Cart, Product, Notification,
-  Category, Brand, InventoryItem, StockTransfer, PurchaseOrder, Supplier
+  Category, Brand, InventoryItem, StockTransfer, PurchaseOrder, Supplier, UserRole
 } from '@/types';
 import {
   mockBusiness, mockProducts, mockNotifications, mockDashboardMetrics,
   mockCategories, mockBrands, mockInventory, mockStockTransfers,
   mockPurchaseOrders, mockSuppliers
 } from '@/data/mockData';
+import { ALL_PERMISSIONS } from '@/types';
 
 // ============================================
 // AUTH STORE
 // ============================================
 
-interface AuthState {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
-
-export const useAuthStore = create<AuthState>((set) => ({
-  user: {
-    id: 'usr_001',
-    email: 'admin@techretail.com',
+// ============================================
+// DEMO ACCOUNTS (email → user profile)
+// ============================================
+const DEMO_ACCOUNTS: Record<string, Omit<AuthUser, 'id'> & { password: string; permissions: string[] }> = {
+  'admin@techretail.com': {
+    password: 'admin123',
     name: 'Alex Thompson',
-    avatar: undefined,
+    email: 'admin@techretail.com',
     phone: '+1-555-3001',
     role: 'admin',
     mfaEnabled: false,
@@ -36,29 +31,143 @@ export const useAuthStore = create<AuthState>((set) => ({
     businessName: 'TechRetail Pro',
     branchId: 'br_001',
     branchName: 'Main Street Store',
+    permissions: ALL_PERMISSIONS.filter(p => !['settings.billing', 'settings.integrations'].includes(p.id)).map(p => p.id),
   },
-  isAuthenticated: true,
+  'super@techretail.com': {
+    password: 'super123',
+    name: 'Sarah Chen',
+    email: 'super@techretail.com',
+    phone: '+1-555-3002',
+    role: 'super_admin',
+    mfaEnabled: false,
+    businessId: 'biz_001',
+    businessName: 'TechRetail Pro',
+    branchId: 'br_001',
+    branchName: 'Main Street Store',
+    permissions: ALL_PERMISSIONS.map(p => p.id),
+  },
+  'manager@techretail.com': {
+    password: 'manager123',
+    name: 'Marcus Johnson',
+    email: 'manager@techretail.com',
+    phone: '+1-555-3003',
+    role: 'manager',
+    mfaEnabled: false,
+    businessId: 'biz_001',
+    businessName: 'TechRetail Pro',
+    branchId: 'br_002',
+    branchName: 'Mall Outlet',
+    permissions: [
+      'dashboard.view', 'dashboard.analytics',
+      'pos.access', 'pos.refund', 'pos.discount', 'pos.hold',
+      'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.transfer', 'inventory.adjust',
+      'customers.view', 'customers.create', 'customers.edit', 'customers.credit',
+      'suppliers.view',
+      'employees.view', 'employees.create', 'employees.edit', 'employees.schedule', 'employees.salary',
+      'transactions.view', 'transactions.refund',
+      'reports.view', 'reports.sales', 'reports.financial',
+      'users.view',
+      'settings.view',
+    ],
+  },
+  'cashier@techretail.com': {
+    password: 'cashier123',
+    name: 'Emily Rodriguez',
+    email: 'cashier@techretail.com',
+    phone: '+1-555-3004',
+    role: 'cashier',
+    mfaEnabled: false,
+    businessId: 'biz_001',
+    businessName: 'TechRetail Pro',
+    branchId: 'br_001',
+    branchName: 'Main Street Store',
+    permissions: [
+      'dashboard.view',
+      'pos.access', 'pos.discount', 'pos.hold',
+      'inventory.view',
+      'customers.view', 'customers.create',
+      'transactions.view',
+      'reports.view',
+    ],
+  },
+  'viewer@techretail.com': {
+    password: 'viewer123',
+    name: 'James Wilson',
+    email: 'viewer@techretail.com',
+    phone: '+1-555-3007',
+    role: 'viewer',
+    mfaEnabled: false,
+    businessId: 'biz_001',
+    businessName: 'TechRetail Pro',
+    branchId: 'br_003',
+    branchName: 'Downtown Branch',
+    permissions: [
+      'dashboard.view',
+      'inventory.view',
+      'customers.view',
+      'suppliers.view',
+      'transactions.view',
+      'reports.view', 'reports.sales',
+      'settings.view',
+    ],
+  },
+};
+
+export { DEMO_ACCOUNTS };
+
+interface AuthState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  permissions: string[];
+  loginError: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  hasPermission: (permission: string) => boolean;
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  isAuthenticated: false,
   isLoading: false,
-  login: async () => {
-    set({ isLoading: true });
-    await new Promise(resolve => setTimeout(resolve, 800));
+  permissions: [],
+  loginError: null,
+  login: async (email: string, password: string) => {
+    set({ isLoading: true, loginError: null });
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    const account = DEMO_ACCOUNTS[email.toLowerCase().trim()];
+    if (!account || account.password !== password) {
+      set({ isLoading: false, loginError: 'Invalid email or password. Please try again.' });
+      return;
+    }
+
     set({
       isAuthenticated: true,
       isLoading: false,
+      loginError: null,
+      permissions: account.permissions,
       user: {
-        id: 'usr_001',
-        email: 'admin@techretail.com',
-        name: 'Alex Thompson',
-        role: 'admin',
-        mfaEnabled: false,
-        businessId: 'biz_001',
-        businessName: 'TechRetail Pro',
-        branchId: 'br_001',
-        branchName: 'Main Street Store',
+        id: `usr_${Date.now()}`,
+        email: account.email,
+        name: account.name,
+        phone: account.phone,
+        role: account.role,
+        mfaEnabled: account.mfaEnabled,
+        businessId: account.businessId,
+        businessName: account.businessName,
+        branchId: account.branchId,
+        branchName: account.branchName,
       },
     });
   },
-  logout: () => set({ user: null, isAuthenticated: false }),
+  logout: () => set({ user: null, isAuthenticated: false, permissions: [], loginError: null }),
+  hasPermission: (permission: string) => {
+    const { user, permissions } = get();
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    return permissions.includes(permission);
+  },
 }));
 
 // ============================================
@@ -216,9 +325,9 @@ interface NotificationState {
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: mockNotifications,
+  notifications: [...mockNotifications],
   get unreadCount() {
-    return mockNotifications.filter(n => !n.isRead).length;
+    return get().notifications.filter(n => !n.isRead).length;
   },
   markRead: (id) => set((s) => ({
     notifications: s.notifications.map(n => n.id === id ? { ...n, isRead: true } : n),

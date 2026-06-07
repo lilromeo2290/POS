@@ -17,6 +17,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { sidebarOpen, toggleSidebar } = useNavStore();
   const { isAuthenticated } = useAuthStore();
 
+  // Reset to dashboard when authentication state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      useNavStore.getState().setPage('dashboard');
+    }
+  }, [isAuthenticated]);
+
   // Close mobile sidebar on route/page change
   const handleCloseSidebar = useCallback(() => {
     if (sidebarOpen) {
