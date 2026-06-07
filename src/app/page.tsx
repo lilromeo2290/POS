@@ -11,6 +11,7 @@ import ReportsPage from '@/components/reports/ReportsPage';
 import SettingsPage from '@/components/settings/SettingsPage';
 import TransactionsPage from '@/components/transactions/TransactionsPage';
 import SuppliersPage from '@/components/suppliers/SuppliersPage';
+import UsersPage from '@/components/users/UsersPage';
 
 function PageContent() {
   const { currentPage } = useNavStore();
@@ -30,6 +31,8 @@ function PageContent() {
       return <SuppliersPage />;
     case 'employees':
       return <EmployeesPage />;
+    case 'users':
+      return <UsersPage />;
     case 'transactions':
       return <TransactionsPage />;
     case 'reports':

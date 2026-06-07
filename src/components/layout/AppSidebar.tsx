@@ -15,6 +15,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   LogOut,
+  Shield,
 } from 'lucide-react';
 import { useNavStore, useAuthStore } from '@/store';
 import { cn, getInitials } from '@/lib/helpers';
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'suppliers', label: 'Suppliers', icon: Truck },
   { id: 'employees', label: 'Employees', icon: UserCog },
+  { id: 'users', label: 'Users & Roles', icon: Shield },
   { id: 'transactions', label: 'Transactions', icon: Receipt },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },

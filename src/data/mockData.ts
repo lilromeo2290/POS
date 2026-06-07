@@ -4,7 +4,7 @@ import type {
   Product, Category, Brand, Customer, Supplier, Employee,
   Transaction, Branch, Notification, DashboardMetrics,
   ChartDataPoint, InventoryItem, Expense, Shift, StockTransfer,
-  PurchaseOrder, Business, Attendance
+  PurchaseOrder, Business, Attendance, SystemUser, RoleDefinition
 } from '@/types';
 
 // ============================================

@@ -58,6 +58,7 @@ const pageTitles: Record<AppPage, string> = {
   employees: 'Employees',
   transactions: 'Transactions',
   reports: 'Reports',
+  users: 'Users & Roles',
   settings: 'Settings',
   subscription: 'Subscription',
 };
