@@ -11,30 +11,6 @@ import ReportsPage from '@/components/reports/ReportsPage';
 import SettingsPage from '@/components/settings/SettingsPage';
 import TransactionsPage from '@/components/transactions/TransactionsPage';
 import SuppliersPage from '@/components/suppliers/SuppliersPage';
-import {
-  Package as PackageIcon,
-  Tag,
-  Users as UsersIcon,
-  Truck,
-  UserCog as UserCogIcon,
-  Receipt,
-  BarChart3 as BarChart3Icon,
-  Building2,
-  Settings as SettingsIcon,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-
-function PlaceholderPage({ title, icon: Icon }: { title: string; icon: React.ElementType }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-      <Icon className="h-16 w-16 text-muted-foreground/30" />
-      <h2 className="text-2xl font-bold">{title}</h2>
-      <p className="max-w-md text-muted-foreground">
-        The {title} module is coming soon. Navigate to other sections using the sidebar.
-      </p>
-    </div>
-  );
-}
 
 function PageContent() {
   const { currentPage } = useNavStore();
@@ -58,8 +34,6 @@ function PageContent() {
       return <TransactionsPage />;
     case 'reports':
       return <ReportsPage />;
-    case 'branches':
-      return <SettingsPage />;
     case 'settings':
       return <SettingsPage />;
     default:

@@ -10,7 +10,6 @@ import {
   UserCog,
   Receipt,
   BarChart3,
-  Building2,
   Settings,
   Cloud,
   ChevronsLeft,
@@ -46,7 +45,6 @@ const navItems: NavItem[] = [
   { id: 'employees', label: 'Employees', icon: UserCog },
   { id: 'transactions', label: 'Transactions', icon: Receipt },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'branches', label: 'Branches', icon: Building2 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
