@@ -6,6 +6,8 @@ import {
   ShieldCheck, Lock, Unlock, Mail, Phone, Building2, Clock,
   ChevronDown, ChevronUp, CheckSquare, Square, Activity,
   Users, Eye, UserX, Key, AlertTriangle, Send, MonitorSmartphone,
+  LayoutDashboard, ShoppingCart, Package, Truck, UserCog,
+  Receipt, BarChart3, Settings,
 } from 'lucide-react';
 import { cn, formatDateTime, getInitials, getStatusColor } from '@/lib/helpers';
 import type { SystemUser, UserRole, RoleDefinition, PermissionCategory } from '@/types';
@@ -59,6 +61,49 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 // ============================================
+// DASHBOARD SECTIONS
+// ============================================
+const DASHBOARD_SECTIONS = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', border: 'border-emerald-300 dark:border-emerald-700', permissions: ['dashboard.view', 'dashboard.analytics'] },
+  { id: 'pos', label: 'POS Terminal', icon: ShoppingCart, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30', border: 'border-sky-300 dark:border-sky-700', permissions: ['pos.access', 'pos.refund', 'pos.discount', 'pos.hold'] },
+  { id: 'inventory', label: 'Inventory & Products', icon: Package, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30', border: 'border-violet-300 dark:border-violet-700', permissions: ['inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete', 'inventory.transfer', 'inventory.adjust'] },
+  { id: 'customers', label: 'Customers', icon: Users, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/30', border: 'border-pink-300 dark:border-pink-700', permissions: ['customers.view', 'customers.create', 'customers.edit', 'customers.delete', 'customers.credit'] },
+  { id: 'suppliers', label: 'Suppliers', icon: Truck, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-300 dark:border-orange-700', permissions: ['suppliers.view', 'suppliers.create', 'suppliers.edit', 'suppliers.purchase_orders'] },
+  { id: 'employees', label: 'Employees', icon: UserCog, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-100 dark:bg-cyan-900/30', border: 'border-cyan-300 dark:border-cyan-700', permissions: ['employees.view', 'employees.create', 'employees.edit', 'employees.schedule', 'employees.salary'] },
+  { id: 'users', label: 'Users & Roles', icon: Shield, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', border: 'border-red-300 dark:border-red-700', permissions: ['users.view', 'users.create', 'users.edit', 'users.delete', 'users.roles'] },
+  { id: 'transactions', label: 'Transactions', icon: Receipt, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30', border: 'border-teal-300 dark:border-teal-700', permissions: ['transactions.view', 'transactions.refund', 'transactions.export'] },
+  { id: 'reports', label: 'Reports', icon: BarChart3, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30', border: 'border-amber-300 dark:border-amber-700', permissions: ['reports.view', 'reports.sales', 'reports.financial', 'reports.export'] },
+  { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800/40', border: 'border-gray-300 dark:border-gray-600', permissions: ['settings.view', 'settings.edit', 'settings.billing', 'settings.integrations'] },
+];
+
+// ============================================
+// ROLE DEFAULT SECTIONS
+// ============================================
+const ROLE_DEFAULT_SECTIONS: Record<UserRole, string[]> = {
+  super_admin: DASHBOARD_SECTIONS.map(s => s.id),
+  admin: DASHBOARD_SECTIONS.map(s => s.id),
+  manager: ['dashboard', 'pos', 'inventory', 'customers', 'suppliers', 'employees', 'transactions', 'reports', 'settings'],
+  cashier: ['dashboard', 'pos', 'inventory', 'customers', 'transactions', 'reports'],
+  viewer: ['dashboard', 'inventory', 'customers', 'suppliers', 'transactions', 'reports', 'settings'],
+};
+
+// ============================================
+// HELPER: SECTIONS ↔ PERMISSIONS
+// ============================================
+function sectionsToPermissions(sectionIds: string[]): string[] {
+  return sectionIds.flatMap(id => {
+    const section = DASHBOARD_SECTIONS.find(s => s.id === id);
+    return section ? section.permissions : [];
+  });
+}
+
+function permissionsToSections(permissions: string[]): string[] {
+  return DASHBOARD_SECTIONS.filter(section =>
+    section.permissions.some(p => permissions.includes(p))
+  ).map(s => s.id);
+}
+
+// ============================================
 // BRANCH DATA
 // ============================================
 const BRANCHES = [
@@ -74,61 +119,71 @@ const BRANCHES = [
 const INITIAL_USERS: SystemUser[] = [
   {
     id: 'usr_001', name: 'Alex Thompson', email: 'alex@techretail.com',
-    phone: '+1-555-3001', role: 'admin', permissions: [],
+    phone: '+1-555-3001', role: 'admin',
+    permissions: ALL_PERMISSIONS.filter(p => !['settings.billing', 'settings.integrations'].includes(p.id)).map(p => p.id),
     branchId: 'br_001', branchName: 'Main Street Store',
     mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T14:30:00Z', createdAt: '2025-01-15T10:00:00Z',
   },
   {
     id: 'usr_002', name: 'Sarah Chen', email: 'sarah@techretail.com',
-    phone: '+1-555-3002', role: 'super_admin', permissions: [],
+    phone: '+1-555-3002', role: 'super_admin',
+    permissions: ALL_PERMISSIONS.map(p => p.id),
     branchId: 'br_001', branchName: 'Main Street Store',
     mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T09:15:00Z', createdAt: '2024-11-01T08:00:00Z',
   },
   {
     id: 'usr_003', name: 'Marcus Johnson', email: 'marcus@techretail.com',
-    phone: '+1-555-3003', role: 'manager', permissions: [],
+    phone: '+1-555-3003', role: 'manager',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.manager),
     branchId: 'br_002', branchName: 'Downtown Branch',
     mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T11:45:00Z', createdAt: '2025-03-20T09:00:00Z',
   },
   {
     id: 'usr_004', name: 'Emily Rodriguez', email: 'emily@techretail.com',
-    phone: '+1-555-3004', role: 'cashier', permissions: [],
+    phone: '+1-555-3004', role: 'cashier',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.cashier),
     branchId: 'br_001', branchName: 'Main Street Store',
     mfaEnabled: false, isActive: true, lastLoginAt: '2026-03-03T16:20:00Z', createdAt: '2025-06-10T12:00:00Z',
   },
   {
     id: 'usr_005', name: 'David Kim', email: 'david@techretail.com',
-    phone: '+1-555-3005', role: 'cashier', permissions: [],
+    phone: '+1-555-3005', role: 'cashier',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.cashier),
     branchId: 'br_003', branchName: 'Westside Mall',
     mfaEnabled: false, isActive: true, lastLoginAt: '2026-03-04T08:00:00Z', createdAt: '2025-08-05T10:00:00Z',
   },
   {
     id: 'usr_006', name: 'Priya Patel', email: 'priya@techretail.com',
-    phone: '+1-555-3006', role: 'manager', permissions: [],
+    phone: '+1-555-3006', role: 'manager',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.manager),
     branchId: 'br_003', branchName: 'Westside Mall',
     mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T13:10:00Z', createdAt: '2025-02-14T14:00:00Z',
   },
   {
     id: 'usr_007', name: 'James Wilson', email: 'james@techretail.com',
-    phone: '+1-555-3007', role: 'viewer', permissions: [],
+    phone: '+1-555-3007', role: 'viewer',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.viewer),
     branchId: 'br_004', branchName: 'Harbor Plaza',
     mfaEnabled: false, isActive: true, lastLoginAt: '2026-03-01T10:30:00Z', createdAt: '2025-09-01T11:00:00Z',
   },
   {
     id: 'usr_008', name: 'Lisa Martinez', email: 'lisa@techretail.com',
-    phone: '+1-555-3008', role: 'cashier', permissions: [],
+    phone: '+1-555-3008', role: 'cashier',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.cashier),
     branchId: 'br_002', branchName: 'Downtown Branch',
     mfaEnabled: false, isActive: false, lastLoginAt: '2026-02-15T17:45:00Z', createdAt: '2025-04-22T09:00:00Z',
   },
   {
     id: 'usr_009', name: 'Robert Chang', email: 'robert@techretail.com',
-    phone: '+1-555-3009', role: 'admin', permissions: [],
+    phone: '+1-555-3009', role: 'admin',
+    permissions: ALL_PERMISSIONS.filter(p => !['settings.billing', 'settings.integrations'].includes(p.id)).map(p => p.id),
     branchId: 'br_001', branchName: 'Main Street Store',
     mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T15:00:00Z', createdAt: '2025-05-18T08:00:00Z',
   },
   {
     id: 'usr_010', name: 'Nina Okafor', email: 'nina@techretail.com',
-    phone: '+1-555-3010', role: 'viewer', permissions: [],
+    phone: '+1-555-3010', role: 'viewer',
+    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.viewer),
     branchId: 'br_004', branchName: 'Harbor Plaza',
     mfaEnabled: false, isActive: false, lastLoginAt: '2026-02-28T12:00:00Z', createdAt: '2025-07-30T15:00:00Z',
   },
@@ -240,10 +295,12 @@ const INITIAL_ACTIVITY_LOG: ActivityLogEntry[] = [
 // ============================================
 const defaultInviteForm = {
   name: '', email: '', phone: '', role: 'cashier' as UserRole, branch: '', sendInviteEmail: true,
+  sections: [...ROLE_DEFAULT_SECTIONS.cashier],
 };
 
 const defaultEditForm = {
   role: 'cashier' as UserRole, branch: '', mfaEnabled: false, isActive: true,
+  sections: [] as string[],
 };
 
 // ============================================
@@ -260,6 +317,121 @@ const ACTION_COLORS: Record<string, string> = {
   Invite: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
   Deactivate: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
 };
+
+// ============================================
+// DASHBOARD ACCESS SECTION COMPONENT
+// ============================================
+function DashboardAccessGrid({
+  sections: selectedSections,
+  onSectionsChange,
+  disabled,
+  role,
+}: {
+  sections: string[];
+  onSectionsChange: (sections: string[]) => void;
+  disabled?: boolean;
+  role: UserRole;
+}) {
+  const isAdminRole = role === 'admin' || role === 'super_admin';
+  const allSelected = DASHBOARD_SECTIONS.length === selectedSections.length;
+  const noneSelected = selectedSections.length === 0;
+
+  const toggleSection = (sectionId: string) => {
+    if (isAdminRole || disabled) return;
+    const updated = selectedSections.includes(sectionId)
+      ? selectedSections.filter(s => s !== sectionId)
+      : [...selectedSections, sectionId];
+    onSectionsChange(updated);
+  };
+
+  const toggleAll = () => {
+    if (isAdminRole || disabled) return;
+    if (allSelected) {
+      onSectionsChange([]);
+    } else {
+      onSectionsChange(DASHBOARD_SECTIONS.map(s => s.id));
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label className="text-sm font-semibold">Dashboard Access</Label>
+          <p className="text-xs text-muted-foreground">Assign which parts of the system this user can access</p>
+        </div>
+        {!isAdminRole && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={toggleAll}
+            disabled={disabled}
+          >
+            {allSelected ? 'Deselect All' : 'Select All'}
+          </Button>
+        )}
+      </div>
+
+      {isAdminRole && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 dark:border-amber-700 dark:bg-amber-950/30">
+          <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+            {role === 'super_admin' ? 'Super Admin' : 'Admin'} has full access to all sections
+          </span>
+        </div>
+      )}
+
+      <div className={cn(
+        'grid grid-cols-2 gap-2',
+        isAdminRole && 'opacity-60 pointer-events-none'
+      )}>
+        {DASHBOARD_SECTIONS.map((section) => {
+          const isChecked = isAdminRole || selectedSections.includes(section.id);
+          const Icon = section.icon;
+
+          return (
+            <label
+              key={section.id}
+              className={cn(
+                'flex items-center gap-2.5 rounded-lg border p-2.5 cursor-pointer transition-all duration-150',
+                isChecked
+                  ? cn(section.border, section.bg, 'shadow-sm')
+                  : 'border-border bg-background hover:bg-muted/50',
+                !isChecked && 'opacity-50'
+              )}
+            >
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={() => toggleSection(section.id)}
+                disabled={isAdminRole || disabled}
+                className="shrink-0"
+              />
+              <div className={cn(
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
+                isChecked ? section.bg : 'bg-muted'
+              )}>
+                <Icon className={cn('h-3.5 w-3.5', isChecked ? section.color : 'text-muted-foreground')} />
+              </div>
+              <span className={cn(
+                'text-xs font-medium truncate',
+                isChecked ? 'text-foreground' : 'text-muted-foreground'
+              )}>
+                {section.label}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+
+      {!isAdminRole && (
+        <p className="text-xs text-muted-foreground">
+          {selectedSections.length} of {DASHBOARD_SECTIONS.length} sections selected
+        </p>
+      )}
+    </div>
+  );
+}
 
 // ============================================
 // USERS PAGE COMPONENT
@@ -341,20 +513,21 @@ export default function UsersPage() {
   // TAB 1: INVITE USER
   // ============================================
   const openInviteDialog = () => {
-    setInviteForm({ ...defaultInviteForm });
+    setInviteForm({ ...defaultInviteForm, sections: [...ROLE_DEFAULT_SECTIONS.cashier] });
     setIsInviteDialogOpen(true);
   };
 
   const handleInviteUser = () => {
     if (!inviteForm.name || !inviteForm.email) return;
     const branchObj = BRANCHES.find((b) => b.id === inviteForm.branch);
+    const permissions = sectionsToPermissions(inviteForm.sections);
     const newUser: SystemUser = {
       id: `usr_${Date.now()}`,
       name: inviteForm.name,
       email: inviteForm.email,
       phone: inviteForm.phone || undefined,
       role: inviteForm.role,
-      permissions: [],
+      permissions,
       branchId: inviteForm.branch || 'br_001',
       branchName: branchObj?.name || 'Main Street Store',
       mfaEnabled: false,
@@ -375,6 +548,7 @@ export default function UsersPage() {
       branch: user.branchId || '',
       mfaEnabled: user.mfaEnabled,
       isActive: user.isActive,
+      sections: permissionsToSections(user.permissions),
     });
     setIsEditDialogOpen(true);
   };
@@ -382,6 +556,7 @@ export default function UsersPage() {
   const handleEditUser = () => {
     if (!editingUser) return;
     const branchObj = BRANCHES.find((b) => b.id === editForm.branch);
+    const permissions = sectionsToPermissions(editForm.sections);
     setUsers((prev) =>
       prev.map((u) =>
         u.id === editingUser.id
@@ -392,6 +567,7 @@ export default function UsersPage() {
               branchName: branchObj?.name || u.branchName,
               mfaEnabled: editForm.mfaEnabled,
               isActive: editForm.isActive,
+              permissions,
             }
           : u
       )
@@ -411,12 +587,10 @@ export default function UsersPage() {
   const handleDeleteUser = () => {
     if (!deletingUser) return;
     if (deletingUser.isActive) {
-      // Deactivate instead of delete
       setUsers((prev) =>
         prev.map((u) => (u.id === deletingUser.id ? { ...u, isActive: false } : u))
       );
     } else {
-      // Permanently remove
       setUsers((prev) => prev.filter((u) => u.id !== deletingUser.id));
     }
     setIsDeleteDialogOpen(false);
@@ -501,6 +675,22 @@ export default function UsersPage() {
     setIsCreateRoleDialogOpen(false);
     setNewRoleForm({ name: '', label: '', description: '', color: 'blue' });
   };
+
+  // ============================================
+  // HELPER: Get user section count for table display
+  // ============================================
+  const getUserSectionInfo = useCallback((user: SystemUser) => {
+    const userSections = permissionsToSections(user.permissions);
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    if (isAdmin) {
+      return { count: DASHBOARD_SECTIONS.length, sections: DASHBOARD_SECTIONS.map(s => s.label), isAdmin: true };
+    }
+    return {
+      count: userSections.length,
+      sections: userSections.map(id => DASHBOARD_SECTIONS.find(s => s.id === id)?.label || id),
+      isAdmin: false,
+    };
+  }, []);
 
   // ============================================
   // RENDER
@@ -609,6 +799,7 @@ export default function UsersPage() {
                   <TableHead className="hidden lg:table-cell">Phone</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead className="hidden sm:table-cell">Branch</TableHead>
+                  <TableHead className="hidden lg:table-cell">Dashboard Access</TableHead>
                   <TableHead className="hidden md:table-cell text-center">MFA</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden xl:table-cell">Last Login</TableHead>
@@ -618,103 +809,132 @@ export default function UsersPage() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                       No users found matching your criteria.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-muted/50">
-                      <TableCell>
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className={cn(
-                              'text-xs',
-                              ROLE_COLORS[user.role].bg,
-                              ROLE_COLORS[user.role].text,
-                              ROLE_COLORS[user.role].darkBg,
-                              ROLE_COLORS[user.role].darkText
-                            )}>
-                              {getInitials(user.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <div className="font-medium truncate">{user.name}</div>
+                  filteredUsers.map((user) => {
+                    const sectionInfo = getUserSectionInfo(user);
+                    return (
+                      <TableRow key={user.id} className="hover:bg-muted/50">
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className={cn(
+                                'text-xs',
+                                ROLE_COLORS[user.role].bg,
+                                ROLE_COLORS[user.role].text,
+                                ROLE_COLORS[user.role].darkBg,
+                                ROLE_COLORS[user.role].darkText
+                              )}>
+                                {getInitials(user.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="font-medium truncate">{user.name}</div>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
-                        {user.email}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
-                        {user.phone || '—'}
-                      </TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <Building2 className="h-3.5 w-3.5" />
-                          <span className="truncate">{user.branchName || '—'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-center">
-                        {user.mfaEnabled ? (
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                          {user.email}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
+                          {user.phone || '—'}
+                        </TableCell>
+                        <TableCell>{getRoleBadge(user.role)}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="h-3.5 w-3.5" />
+                            <span className="truncate">{user.branchName || '—'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Lock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mx-auto" />
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  'cursor-default text-xs gap-1',
+                                  sectionInfo.isAdmin
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800/40 dark:text-slate-300'
+                                )}
+                              >
+                                {sectionInfo.isAdmin && <Lock className="h-3 w-3" />}
+                                {sectionInfo.count} section{sectionInfo.count !== 1 ? 's' : ''}
+                              </Badge>
                             </TooltipTrigger>
-                            <TooltipContent>MFA Enabled</TooltipContent>
+                            <TooltipContent side="bottom" className="max-w-[220px]">
+                              <p className="font-semibold mb-1">Dashboard Access</p>
+                              <div className="space-y-0.5">
+                                {sectionInfo.sections.map((s, i) => (
+                                  <div key={i} className="text-xs">{s}</div>
+                                ))}
+                              </div>
+                            </TooltipContent>
                           </Tooltip>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Unlock className="h-4 w-4 text-muted-foreground mx-auto" />
-                            </TooltipTrigger>
-                            <TooltipContent>MFA Disabled</TooltipContent>
-                          </Tooltip>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={getStatusColor(user.isActive ? 'active' : 'cancelled')}>
-                          {user.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden xl:table-cell text-muted-foreground text-xs">
-                        {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEditDialog(user)}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit User
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditDialog(user)}>
-                              <Key className="mr-2 h-4 w-4" /> Manage Access
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => openDeleteDialog(user)}
-                            >
-                              {user.isActive ? (
-                                <>
-                                  <UserX className="mr-2 h-4 w-4" /> Deactivate
-                                </>
-                              ) : (
-                                <>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-center">
+                          {user.mfaEnabled ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Lock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mx-auto" />
+                              </TooltipTrigger>
+                              <TooltipContent>MFA Enabled</TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Unlock className="h-4 w-4 text-muted-foreground mx-auto" />
+                              </TooltipTrigger>
+                              <TooltipContent>MFA Disabled</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={getStatusColor(user.isActive ? 'active' : 'cancelled')}>
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell text-muted-foreground text-xs">
+                          {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit User
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                                <Key className="mr-2 h-4 w-4" /> Manage Access
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => openDeleteDialog(user)}
+                              >
+                                {user.isActive ? (
+                                  <>
+                                    <UserX className="mr-2 h-4 w-4" /> Deactivate
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -1000,7 +1220,7 @@ export default function UsersPage() {
       {/* INVITE USER DIALOG */}
       {/* ============================================ */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[580px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" /> Invite User
@@ -1009,84 +1229,104 @@ export default function UsersPage() {
               Send an invitation to a new team member
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="invite-name">Full Name</Label>
-              <Input
-                id="invite-name"
-                value={inviteForm.name}
-                onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-                placeholder="Enter full name"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          <ScrollArea className="max-h-[calc(90vh-140px)]">
+            <div className="grid gap-4 py-4 pr-4">
               <div className="space-y-2">
-                <Label htmlFor="invite-email">Email</Label>
+                <Label htmlFor="invite-name">Full Name</Label>
                 <Input
-                  id="invite-email"
-                  type="email"
-                  value={inviteForm.email}
-                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                  placeholder="user@example.com"
+                  id="invite-name"
+                  value={inviteForm.name}
+                  onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
+                  placeholder="Enter full name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="invite-phone">Phone</Label>
-                <Input
-                  id="invite-phone"
-                  value={inviteForm.phone}
-                  onChange={(e) => setInviteForm({ ...inviteForm, phone: e.target.value })}
-                  placeholder="+1-555-0000"
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-email">Email</Label>
+                  <Input
+                    id="invite-email"
+                    type="email"
+                    value={inviteForm.email}
+                    onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                    placeholder="user@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-phone">Phone</Label>
+                  <Input
+                    id="invite-phone"
+                    value={inviteForm.phone}
+                    onChange={(e) => setInviteForm({ ...inviteForm, phone: e.target.value })}
+                    placeholder="+1-555-0000"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role">Role</Label>
+                  <Select
+                    value={inviteForm.role}
+                    onValueChange={(v) => {
+                      const newRole = v as UserRole;
+                      setInviteForm({
+                        ...inviteForm,
+                        role: newRole,
+                        sections: [...ROLE_DEFAULT_SECTIONS[newRole]],
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="invite-role">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-branch">Branch</Label>
+                  <Select
+                    value={inviteForm.branch}
+                    onValueChange={(v) => setInviteForm({ ...inviteForm, branch: v })}
+                  >
+                    <SelectTrigger id="invite-branch">
+                      <SelectValue placeholder="Select branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BRANCHES.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Dashboard Access Section */}
+              <DashboardAccessGrid
+                sections={inviteForm.sections}
+                onSectionsChange={(sections) => setInviteForm({ ...inviteForm, sections })}
+                role={inviteForm.role}
+              />
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="invite-send-email" className="text-sm font-medium">Send invitation email</Label>
+                  <p className="text-xs text-muted-foreground">User will receive a setup link via email</p>
+                </div>
+                <Switch
+                  id="invite-send-email"
+                  checked={inviteForm.sendInviteEmail}
+                  onCheckedChange={(v) => setInviteForm({ ...inviteForm, sendInviteEmail: v })}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="invite-role">Role</Label>
-                <Select
-                  value={inviteForm.role}
-                  onValueChange={(v) => setInviteForm({ ...inviteForm, role: v as UserRole })}
-                >
-                  <SelectTrigger id="invite-role">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invite-branch">Branch</Label>
-                <Select
-                  value={inviteForm.branch}
-                  onValueChange={(v) => setInviteForm({ ...inviteForm, branch: v })}
-                >
-                  <SelectTrigger id="invite-branch">
-                    <SelectValue placeholder="Select branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BRANCHES.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="invite-send-email" className="text-sm font-medium">Send invitation email</Label>
-                <p className="text-xs text-muted-foreground">User will receive a setup link via email</p>
-              </div>
-              <Switch
-                id="invite-send-email"
-                checked={inviteForm.sendInviteEmail}
-                onCheckedChange={(v) => setInviteForm({ ...inviteForm, sendInviteEmail: v })}
-              />
-            </div>
-          </div>
+          </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>Cancel</Button>
             <Button
@@ -1104,7 +1344,7 @@ export default function UsersPage() {
       {/* EDIT USER DIALOG */}
       {/* ============================================ */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[580px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pencil className="h-5 w-5" /> Edit User
@@ -1114,91 +1354,138 @@ export default function UsersPage() {
             </DialogDescription>
           </DialogHeader>
           {editingUser && (
-            <div className="grid gap-4 py-4">
-              {/* User Info Summary */}
-              <div className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className={cn(
-                    'text-sm',
-                    ROLE_COLORS[editingUser.role].bg,
-                    ROLE_COLORS[editingUser.role].text,
-                    ROLE_COLORS[editingUser.role].darkBg,
-                    ROLE_COLORS[editingUser.role].darkText
-                  )}>
-                    {getInitials(editingUser.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">{editingUser.name}</p>
-                  <p className="text-xs text-muted-foreground">{editingUser.email}</p>
+            <ScrollArea className="max-h-[calc(90vh-140px)]">
+              <div className="grid gap-4 py-4 pr-4">
+                {/* User Info Summary */}
+                <div className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className={cn(
+                      'text-sm',
+                      ROLE_COLORS[editingUser.role].bg,
+                      ROLE_COLORS[editingUser.role].text,
+                      ROLE_COLORS[editingUser.role].darkBg,
+                      ROLE_COLORS[editingUser.role].darkText
+                    )}>
+                      {getInitials(editingUser.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium">{editingUser.name}</p>
+                    <p className="text-xs text-muted-foreground">{editingUser.email}</p>
+                  </div>
+                  {getRoleBadge(editingUser.role)}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-role">Role</Label>
-                  <Select
-                    value={editForm.role}
-                    onValueChange={(v) => setEditForm({ ...editForm, role: v as UserRole })}
-                  >
-                    <SelectTrigger id="edit-role">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(ROLE_LABELS).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-role">Role</Label>
+                    <Select
+                      value={editForm.role}
+                      onValueChange={(v) => {
+                        const newRole = v as UserRole;
+                        const isAdminRole = newRole === 'admin' || newRole === 'super_admin';
+                        setEditForm({
+                          ...editForm,
+                          role: newRole,
+                          sections: isAdminRole
+                            ? DASHBOARD_SECTIONS.map(s => s.id)
+                            : [...ROLE_DEFAULT_SECTIONS[newRole]],
+                        });
+                      }}
+                    >
+                      <SelectTrigger id="edit-role">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-branch">Branch</Label>
+                    <Select
+                      value={editForm.branch}
+                      onValueChange={(v) => setEditForm({ ...editForm, branch: v })}
+                    >
+                      <SelectTrigger id="edit-branch">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BRANCHES.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-branch">Branch</Label>
-                  <Select
-                    value={editForm.branch}
-                    onValueChange={(v) => setEditForm({ ...editForm, branch: v })}
-                  >
-                    <SelectTrigger id="edit-branch">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BRANCHES.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
 
-              <Separator />
+                <Separator />
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="edit-mfa" className="text-sm font-medium flex items-center gap-1.5">
-                    <Lock className="h-4 w-4" /> MFA Enabled
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Require multi-factor authentication on login</p>
-                </div>
-                <Switch
-                  id="edit-mfa"
-                  checked={editForm.mfaEnabled}
-                  onCheckedChange={(v) => setEditForm({ ...editForm, mfaEnabled: v })}
+                {/* Dashboard Access Section */}
+                <DashboardAccessGrid
+                  sections={editForm.sections}
+                  onSectionsChange={(sections) => setEditForm({ ...editForm, sections })}
+                  role={editForm.role}
                 />
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="edit-active" className="text-sm font-medium flex items-center gap-1.5">
-                    <Eye className="h-4 w-4" /> Active Status
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Deactivated users cannot log in</p>
+                {/* Section Access Summary */}
+                <div className="rounded-lg border bg-muted/20 p-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Access Summary</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {editForm.sections.map((sectionId) => {
+                      const section = DASHBOARD_SECTIONS.find(s => s.id === sectionId);
+                      if (!section) return null;
+                      const Icon = section.icon;
+                      return (
+                        <Badge
+                          key={sectionId}
+                          variant="secondary"
+                          className={cn('text-[10px] gap-1', section.bg, section.color)}
+                        >
+                          <Icon className="h-2.5 w-2.5" />
+                          {section.label}
+                        </Badge>
+                      );
+                    })}
+                    {editForm.sections.length === 0 && (
+                      <span className="text-xs text-muted-foreground">No sections selected</span>
+                    )}
+                  </div>
                 </div>
-                <Switch
-                  id="edit-active"
-                  checked={editForm.isActive}
-                  onCheckedChange={(v) => setEditForm({ ...editForm, isActive: v })}
-                />
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="edit-mfa" className="text-sm font-medium flex items-center gap-1.5">
+                      <Lock className="h-4 w-4" /> MFA Enabled
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Require multi-factor authentication on login</p>
+                  </div>
+                  <Switch
+                    id="edit-mfa"
+                    checked={editForm.mfaEnabled}
+                    onCheckedChange={(v) => setEditForm({ ...editForm, mfaEnabled: v })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="edit-active" className="text-sm font-medium flex items-center gap-1.5">
+                      <Eye className="h-4 w-4" /> Active Status
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Deactivated users cannot log in</p>
+                  </div>
+                  <Switch
+                    id="edit-active"
+                    checked={editForm.isActive}
+                    onCheckedChange={(v) => setEditForm({ ...editForm, isActive: v })}
+                  />
+                </div>
               </div>
-            </div>
+            </ScrollArea>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>

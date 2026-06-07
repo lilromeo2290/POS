@@ -33,3 +33,33 @@ Stage Summary:
 - Responsive design (mobile, tablet, desktop)
 - All pages verified working in browser
 - Clean lint pass
+
+---
+Task ID: 2
+Agent: Main
+Task: Implement Dashboard Access Assignment for Users & Roles
+
+Work Log:
+- Analyzed current UsersPage, store, types, sidebar, and auth system
+- Added DASHBOARD_SECTIONS constant mapping 10 sidebar sections to their permissions with icons/colors
+- Added ROLE_DEFAULT_SECTIONS defining default section access per role (admin/super_admin = all, manager = 9, cashier = 6, viewer = 7)
+- Added helper functions: sectionsToPermissions() and permissionsToSections() for bidirectional conversion
+- Created DashboardAccessGrid reusable component with:
+  - 2-column grid of section cards with checkboxes, colored icons, and labels
+  - Admin lock banner when role is admin/super_admin (all sections auto-checked, non-interactive)
+  - Select All/Deselect All toggle for non-admin roles
+  - Section count display
+- Updated Invite User dialog: added DashboardAccessGrid, role change auto-fills sections, handleInviteUser derives permissions
+- Updated Edit User dialog: added DashboardAccessGrid, Access Summary badges panel, role change auto-fills sections, handleEditUser derives permissions
+- Updated INITIAL_USERS with proper permissions arrays derived from their role's default sections
+- Added "Dashboard Access" column to Users Table with tooltip listing all accessible sections
+- Added getUserSectionInfo helper for table display
+- Both dialogs now use ScrollArea for overflow handling
+- Verified TypeScript compilation and Next.js build pass successfully
+
+Stage Summary:
+- Users can now be assigned specific dashboard sections when created or edited
+- Admin/Super Admin always has full access (locked, cannot be changed)
+- Role selection auto-fills default sections but allows customization for non-admin roles
+- Sidebar already filters based on hasPermission(), so section assignment directly controls what users see
+- Clean build confirmed
