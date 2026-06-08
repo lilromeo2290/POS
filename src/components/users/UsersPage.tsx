@@ -195,7 +195,7 @@ const INITIAL_ACTIVITY_LOG: ActivityLogEntry[] = [];
 // DEFAULT FORM
 // ============================================
 const defaultInviteForm = {
-  name: '', email: '', phone: '', password: 'password123', role: 'cashier' as UserRole, branch: '', sendInviteEmail: true,
+  name: '', email: '', phone: '', password: 'password123', role: 'cashier' as UserRole, branch: '',
   sections: [...ROLE_DEFAULT_SECTIONS.cashier],
 };
 
@@ -1231,17 +1231,6 @@ export default function UsersPage() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="invite-send-email" className="text-sm font-medium">Send invitation email</Label>
-                  <p className="text-xs text-muted-foreground">User will receive a setup link via email</p>
-                </div>
-                <Switch
-                  id="invite-send-email"
-                  checked={inviteForm.sendInviteEmail}
-                  onCheckedChange={(v) => setInviteForm({ ...inviteForm, sendInviteEmail: v })}
-                />
-              </div>
             </div>
           </ScrollArea>
           <DialogFooter>
