@@ -63,3 +63,26 @@ Stage Summary:
 - Role selection auto-fills default sections but allows customization for non-admin roles
 - Sidebar already filters based on hasPermission(), so section assignment directly controls what users see
 - Clean build confirmed
+
+---
+Task ID: 3
+Agent: Main
+Task: Clear all users, leave only one admin
+
+Work Log:
+- Updated INITIAL_USERS in UsersPage: reduced from 10 users to 1 admin (admin@mybusiness.com, full permissions)
+- Updated INITIAL_ROLES userCounts: admin=1, all other roles=0
+- Cleared INITIAL_ACTIVITY_LOG to empty array
+- Updated BRANCHES to just 1 branch: Main Branch
+- Updated DEMO_ACCOUNTS in store: only 1 admin account (admin@mybusiness.com / admin123)
+- Updated LoginScreen DEMO_ACCOUNT_LIST: only 1 admin card
+- Updated login screen text: "Quick sign in" divider, updated help text
+- Changed demo card grid from 2-column to 1-column (single card)
+- Verified Next.js build passes
+
+Stage Summary:
+- System now starts fresh with only 1 admin user
+- Login credentials: admin@mybusiness.com / admin123
+- Admin has full access to all dashboard sections
+- All other users, activity logs, and extra branches removed
+- New users can be added via the Users & Roles page after login

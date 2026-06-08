@@ -79,11 +79,7 @@ const ROLE_STYLES: Record<string, { icon: React.ElementType; color: string; bg: 
 
 // Demo accounts in a nice order
 const DEMO_ACCOUNT_LIST = [
-  { email: 'super@techretail.com', label: 'Super Admin', role: 'super_admin' as UserRole },
-  { email: 'admin@techretail.com', label: 'Administrator', role: 'admin' as UserRole },
-  { email: 'manager@techretail.com', label: 'Manager', role: 'manager' as UserRole },
-  { email: 'cashier@techretail.com', label: 'Cashier', role: 'cashier' as UserRole },
-  { email: 'viewer@techretail.com', label: 'Viewer', role: 'viewer' as UserRole },
+  { email: 'admin@mybusiness.com', label: 'Administrator', role: 'admin' as UserRole },
 ];
 
 export default function LoginScreen() {
@@ -298,12 +294,12 @@ export default function LoginScreen() {
               <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Demo accounts</span>
+              <span className="bg-background px-2 text-muted-foreground">Quick sign in</span>
             </div>
           </div>
 
           {/* Demo Account Cards */}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2">
             {DEMO_ACCOUNT_LIST.map((demo) => {
               const account = DEMO_ACCOUNTS[demo.email];
               const style = ROLE_STYLES[demo.role];
@@ -338,7 +334,7 @@ export default function LoginScreen() {
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Click any demo account above to sign in with that role. Each role has different access levels and dashboard views.
+            Click the account above to sign in as the administrator. You can add more users with different roles after logging in.
           </p>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">

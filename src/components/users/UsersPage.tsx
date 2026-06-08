@@ -107,10 +107,7 @@ function permissionsToSections(permissions: string[]): string[] {
 // BRANCH DATA
 // ============================================
 const BRANCHES = [
-  { id: 'br_001', name: 'Main Street Store' },
-  { id: 'br_002', name: 'Downtown Branch' },
-  { id: 'br_003', name: 'Westside Mall' },
-  { id: 'br_004', name: 'Harbor Plaza' },
+  { id: 'br_001', name: 'Main Branch' },
 ];
 
 // ============================================
@@ -118,74 +115,11 @@ const BRANCHES = [
 // ============================================
 const INITIAL_USERS: SystemUser[] = [
   {
-    id: 'usr_001', name: 'Alex Thompson', email: 'alex@techretail.com',
-    phone: '+1-555-3001', role: 'admin',
-    permissions: ALL_PERMISSIONS.filter(p => !['settings.billing', 'settings.integrations'].includes(p.id)).map(p => p.id),
-    branchId: 'br_001', branchName: 'Main Street Store',
-    mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T14:30:00Z', createdAt: '2025-01-15T10:00:00Z',
-  },
-  {
-    id: 'usr_002', name: 'Sarah Chen', email: 'sarah@techretail.com',
-    phone: '+1-555-3002', role: 'super_admin',
+    id: 'usr_001', name: 'Admin', email: 'admin@mybusiness.com',
+    phone: '', role: 'admin',
     permissions: ALL_PERMISSIONS.map(p => p.id),
-    branchId: 'br_001', branchName: 'Main Street Store',
-    mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T09:15:00Z', createdAt: '2024-11-01T08:00:00Z',
-  },
-  {
-    id: 'usr_003', name: 'Marcus Johnson', email: 'marcus@techretail.com',
-    phone: '+1-555-3003', role: 'manager',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.manager),
-    branchId: 'br_002', branchName: 'Downtown Branch',
-    mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T11:45:00Z', createdAt: '2025-03-20T09:00:00Z',
-  },
-  {
-    id: 'usr_004', name: 'Emily Rodriguez', email: 'emily@techretail.com',
-    phone: '+1-555-3004', role: 'cashier',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.cashier),
-    branchId: 'br_001', branchName: 'Main Street Store',
-    mfaEnabled: false, isActive: true, lastLoginAt: '2026-03-03T16:20:00Z', createdAt: '2025-06-10T12:00:00Z',
-  },
-  {
-    id: 'usr_005', name: 'David Kim', email: 'david@techretail.com',
-    phone: '+1-555-3005', role: 'cashier',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.cashier),
-    branchId: 'br_003', branchName: 'Westside Mall',
-    mfaEnabled: false, isActive: true, lastLoginAt: '2026-03-04T08:00:00Z', createdAt: '2025-08-05T10:00:00Z',
-  },
-  {
-    id: 'usr_006', name: 'Priya Patel', email: 'priya@techretail.com',
-    phone: '+1-555-3006', role: 'manager',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.manager),
-    branchId: 'br_003', branchName: 'Westside Mall',
-    mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T13:10:00Z', createdAt: '2025-02-14T14:00:00Z',
-  },
-  {
-    id: 'usr_007', name: 'James Wilson', email: 'james@techretail.com',
-    phone: '+1-555-3007', role: 'viewer',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.viewer),
-    branchId: 'br_004', branchName: 'Harbor Plaza',
-    mfaEnabled: false, isActive: true, lastLoginAt: '2026-03-01T10:30:00Z', createdAt: '2025-09-01T11:00:00Z',
-  },
-  {
-    id: 'usr_008', name: 'Lisa Martinez', email: 'lisa@techretail.com',
-    phone: '+1-555-3008', role: 'cashier',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.cashier),
-    branchId: 'br_002', branchName: 'Downtown Branch',
-    mfaEnabled: false, isActive: false, lastLoginAt: '2026-02-15T17:45:00Z', createdAt: '2025-04-22T09:00:00Z',
-  },
-  {
-    id: 'usr_009', name: 'Robert Chang', email: 'robert@techretail.com',
-    phone: '+1-555-3009', role: 'admin',
-    permissions: ALL_PERMISSIONS.filter(p => !['settings.billing', 'settings.integrations'].includes(p.id)).map(p => p.id),
-    branchId: 'br_001', branchName: 'Main Street Store',
-    mfaEnabled: true, isActive: true, lastLoginAt: '2026-03-04T15:00:00Z', createdAt: '2025-05-18T08:00:00Z',
-  },
-  {
-    id: 'usr_010', name: 'Nina Okafor', email: 'nina@techretail.com',
-    phone: '+1-555-3010', role: 'viewer',
-    permissions: sectionsToPermissions(ROLE_DEFAULT_SECTIONS.viewer),
-    branchId: 'br_004', branchName: 'Harbor Plaza',
-    mfaEnabled: false, isActive: false, lastLoginAt: '2026-02-28T12:00:00Z', createdAt: '2025-07-30T15:00:00Z',
+    branchId: 'br_001', branchName: 'Main Branch',
+    mfaEnabled: false, isActive: true, lastLoginAt: new Date().toISOString(), createdAt: new Date().toISOString(),
   },
 ];
 
@@ -196,14 +130,14 @@ const INITIAL_ROLES: RoleDefinition[] = [
   {
     id: 'role_sa', name: 'super_admin', label: 'Super Admin',
     description: 'Full system access with all permissions. Can manage all settings, billing, and integrations.',
-    color: 'red', permissions: ALL_PERMISSIONS.map((p) => p.id), userCount: 1,
+    color: 'red', permissions: ALL_PERMISSIONS.map((p) => p.id), userCount: 0,
   },
   {
     id: 'role_admin', name: 'admin', label: 'Administrator',
     description: 'Administrative access with most permissions except billing and integration management.',
     color: 'amber',
     permissions: ALL_PERMISSIONS.filter((p) => !['settings.billing', 'settings.integrations'].includes(p.id)).map((p) => p.id),
-    userCount: 2,
+    userCount: 1,
   },
   {
     id: 'role_mgr', name: 'manager', label: 'Manager',
@@ -221,7 +155,7 @@ const INITIAL_ROLES: RoleDefinition[] = [
       'users.view',
       'settings.view',
     ],
-    userCount: 2,
+    userCount: 0,
   },
   {
     id: 'role_cash', name: 'cashier', label: 'Cashier',
@@ -235,7 +169,7 @@ const INITIAL_ROLES: RoleDefinition[] = [
       'transactions.view',
       'reports.view',
     ],
-    userCount: 3,
+    userCount: 0,
   },
   {
     id: 'role_view', name: 'viewer', label: 'Viewer',
@@ -250,7 +184,7 @@ const INITIAL_ROLES: RoleDefinition[] = [
       'reports.view', 'reports.sales',
       'settings.view',
     ],
-    userCount: 2,
+    userCount: 0,
   },
 ];
 
@@ -267,28 +201,7 @@ interface ActivityLogEntry {
   ipAddress: string;
 }
 
-const INITIAL_ACTIVITY_LOG: ActivityLogEntry[] = [
-  { id: 'log_001', timestamp: '2026-03-04T15:30:00Z', userId: 'usr_002', userName: 'Sarah Chen', action: 'Login', resource: 'Authentication', ipAddress: '192.168.1.10' },
-  { id: 'log_002', timestamp: '2026-03-04T15:15:00Z', userId: 'usr_001', userName: 'Alex Thompson', action: 'Update', resource: 'User Profile', ipAddress: '192.168.1.22' },
-  { id: 'log_003', timestamp: '2026-03-04T14:50:00Z', userId: 'usr_003', userName: 'Marcus Johnson', action: 'Create', resource: 'Purchase Order', ipAddress: '192.168.2.15' },
-  { id: 'log_004', timestamp: '2026-03-04T14:30:00Z', userId: 'usr_009', userName: 'Robert Chang', action: 'Login', resource: 'Authentication', ipAddress: '192.168.1.18' },
-  { id: 'log_005', timestamp: '2026-03-04T14:10:00Z', userId: 'usr_006', userName: 'Priya Patel', action: 'Refund', resource: 'Transaction #TXN-2026-0042', ipAddress: '192.168.3.8' },
-  { id: 'log_006', timestamp: '2026-03-04T13:45:00Z', userId: 'usr_002', userName: 'Sarah Chen', action: 'Update', resource: 'Role: Cashier', ipAddress: '192.168.1.10' },
-  { id: 'log_007', timestamp: '2026-03-04T13:20:00Z', userId: 'usr_004', userName: 'Emily Rodriguez', action: 'Create', resource: 'Sale #TXN-2026-0098', ipAddress: '192.168.1.30' },
-  { id: 'log_008', timestamp: '2026-03-04T12:55:00Z', userId: 'usr_005', userName: 'David Kim', action: 'Create', resource: 'Sale #TXN-2026-0097', ipAddress: '192.168.3.12' },
-  { id: 'log_009', timestamp: '2026-03-04T12:30:00Z', userId: 'usr_003', userName: 'Marcus Johnson', action: 'Update', resource: 'Inventory: Wireless Mouse', ipAddress: '192.168.2.15' },
-  { id: 'log_010', timestamp: '2026-03-04T11:45:00Z', userId: 'usr_001', userName: 'Alex Thompson', action: 'Invite', resource: 'User: nina@techretail.com', ipAddress: '192.168.1.22' },
-  { id: 'log_011', timestamp: '2026-03-04T11:00:00Z', userId: 'usr_006', userName: 'Priya Patel', action: 'Update', resource: 'Employee Schedule', ipAddress: '192.168.3.8' },
-  { id: 'log_012', timestamp: '2026-03-04T10:30:00Z', userId: 'usr_009', userName: 'Robert Chang', action: 'Export', resource: 'Sales Report', ipAddress: '192.168.1.18' },
-  { id: 'log_013', timestamp: '2026-03-04T10:00:00Z', userId: 'usr_002', userName: 'Sarah Chen', action: 'Update', resource: 'Business Settings', ipAddress: '192.168.1.10' },
-  { id: 'log_014', timestamp: '2026-03-04T09:15:00Z', userId: 'usr_003', userName: 'Marcus Johnson', action: 'Login', resource: 'Authentication', ipAddress: '192.168.2.15' },
-  { id: 'log_015', timestamp: '2026-03-04T09:00:00Z', userId: 'usr_004', userName: 'Emily Rodriguez', action: 'Login', resource: 'Authentication', ipAddress: '192.168.1.30' },
-  { id: 'log_016', timestamp: '2026-03-04T08:45:00Z', userId: 'usr_005', userName: 'David Kim', action: 'Login', resource: 'Authentication', ipAddress: '192.168.3.12' },
-  { id: 'log_017', timestamp: '2026-03-03T17:30:00Z', userId: 'usr_001', userName: 'Alex Thompson', action: 'Deactivate', resource: 'User: Lisa Martinez', ipAddress: '192.168.1.22' },
-  { id: 'log_018', timestamp: '2026-03-03T16:00:00Z', userId: 'usr_006', userName: 'Priya Patel', action: 'Create', resource: 'Customer: VIP Group', ipAddress: '192.168.3.8' },
-  { id: 'log_019', timestamp: '2026-03-03T14:20:00Z', userId: 'usr_009', userName: 'Robert Chang', action: 'Update', resource: 'Role: Manager', ipAddress: '192.168.1.18' },
-  { id: 'log_020', timestamp: '2026-03-03T12:00:00Z', userId: 'usr_002', userName: 'Sarah Chen', action: 'Export', resource: 'Financial Report', ipAddress: '192.168.1.10' },
-];
+const INITIAL_ACTIVITY_LOG: ActivityLogEntry[] = [];
 
 // ============================================
 // DEFAULT FORM
