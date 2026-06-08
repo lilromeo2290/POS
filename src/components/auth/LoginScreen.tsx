@@ -12,8 +12,10 @@ import {
   UserCog,
   User,
   Eye as ViewIcon,
+  Lock,
 } from 'lucide-react';
 import { useAuthStore, DEMO_ACCOUNTS } from '@/store';
+import { useUserStore } from '@/store/userStore';
 import { cn, getInitials } from '@/lib/helpers';
 import type { UserRole } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,7 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 // ============================================
 // ROLE STYLING CONFIG
@@ -77,19 +80,26 @@ const ROLE_STYLES: Record<string, { icon: React.ElementType; color: string; bg: 
   },
 };
 
-// Demo accounts in a nice order
-const DEMO_ACCOUNT_LIST = [
-  { email: 'admin@mybusiness.com', label: 'Administrator', role: 'admin' as UserRole },
-];
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Administrator',
+  manager: 'Manager',
+  cashier: 'Cashier',
+  viewer: 'Viewer',
+};
 
 export default function LoginScreen() {
   const { login, isLoading, loginError } = useAuthStore();
+  const { users, credentials } = useUserStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+
+  // Only show active users as quick-login cards
+  const activeUsers = users.filter((u) => u.isActive);
 
   const handleLogin = useCallback(
     async (e: React.FormEvent) => {
@@ -111,19 +121,19 @@ export default function LoginScreen() {
   );
 
   const handleDemoLogin = useCallback(
-    async (demoEmail: string) => {
-      const account = DEMO_ACCOUNTS[demoEmail];
-      if (!account) return;
-      setEmail(demoEmail);
-      setPassword(account.password);
+    async (userEmail: string) => {
+      const accountPassword = credentials[userEmail.toLowerCase().trim()];
+      if (!accountPassword) return;
+      setEmail(userEmail);
+      setPassword(accountPassword);
       setError('');
       try {
-        await login(demoEmail, account.password);
+        await login(userEmail, accountPassword);
       } catch {
         setError('Login failed. Please try again.');
       }
     },
-    [login]
+    [login, credentials]
   );
 
   const displayError = error || loginError;
@@ -298,46 +308,74 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          {/* Demo Account Cards */}
+          {/* User Account Cards - Dynamically from store */}
           <div className="grid grid-cols-1 gap-2">
-            {DEMO_ACCOUNT_LIST.map((demo) => {
-              const account = DEMO_ACCOUNTS[demo.email];
-              const style = ROLE_STYLES[demo.role];
+            {activeUsers.map((user) => {
+              const style = ROLE_STYLES[user.role] || ROLE_STYLES.viewer;
               const Icon = style.icon;
+              const userPassword = credentials[user.email.toLowerCase().trim()];
+              const isAdmin = user.role === 'admin' || user.role === 'super_admin';
               return (
                 <Card
-                  key={demo.email}
+                  key={user.id}
                   className={cn(
                     'cursor-pointer border transition-all duration-200 hover:shadow-md',
                     style.border,
                     style.darkBg
                   )}
-                  onClick={() => handleDemoLogin(demo.email)}
+                  onClick={() => handleDemoLogin(user.email)}
                 >
                   <CardContent className="flex items-center gap-3 p-3">
                     <Avatar className="h-9 w-9 shrink-0">
                       <AvatarFallback className={cn('text-xs font-semibold', style.bg, style.color)}>
-                        {getInitials(account.name)}
+                        {getInitials(user.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{account.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
+                        {isAdmin && <Lock className="h-3 w-3 text-amber-500" />}
+                      </div>
                       <div className="flex items-center gap-1.5">
                         <Icon className={cn('h-3 w-3', style.color)} />
-                        <span className={cn('text-[11px] font-medium', style.color)}>{demo.label}</span>
+                        <span className={cn('text-[11px] font-medium', style.color)}>
+                          {ROLE_LABELS[user.role] || user.role}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground ml-1">
+                          {user.email}
+                        </span>
                       </div>
                     </div>
+                    {isAdmin && (
+                      <Badge variant="secondary" className={cn('text-[9px] px-1.5 py-0', style.badge)}>
+                        Full Access
+                      </Badge>
+                    )}
                   </CardContent>
                 </Card>
               );
             })}
           </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Click the account above to sign in as the administrator. You can add more users with different roles after logging in.
+          <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3">
+            <div className="flex items-start gap-2">
+              <Lock className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+              <div className="text-[11px] text-muted-foreground space-y-1">
+                <p>
+                  <strong>Admin:</strong> password is <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">admin123</code>
+                </p>
+                <p>
+                  <strong>New users:</strong> password is <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">password123</code>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Click an account above to sign in. Add more users with different dashboard access from Users &amp; Roles after logging in.
           </p>
 
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <p className="mt-3 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
             <button className="font-semibold text-primary hover:text-primary/80">
               Contact sales

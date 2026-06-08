@@ -11,31 +11,49 @@ import {
   mockPurchaseOrders, mockSuppliers
 } from '@/data/mockData';
 import { ALL_PERMISSIONS } from '@/types';
+import { useUserStore } from './userStore';
 
 // ============================================
 // AUTH STORE
 // ============================================
 
-// ============================================
-// DEMO ACCOUNTS (email → user profile)
-// ============================================
-const DEMO_ACCOUNTS: Record<string, Omit<AuthUser, 'id'> & { password: string; permissions: string[] }> = {
-  'admin@mybusiness.com': {
-    password: 'admin123',
-    name: 'Admin',
-    email: 'admin@mybusiness.com',
-    phone: '',
-    role: 'admin',
-    mfaEnabled: false,
-    businessId: 'biz_001',
-    businessName: 'My Business',
-    branchId: 'br_001',
-    branchName: 'Main Branch',
-    permissions: ALL_PERMISSIONS.map(p => p.id),
-  },
-};
-
-export { DEMO_ACCOUNTS };
+// DEMO_ACCOUNTS is now derived from the UserStore dynamically.
+// Kept as a reference for backward compatibility; the login function
+// reads from useUserStore instead.
+export const DEMO_ACCOUNTS = (() => {
+  // This getter reads from the user store at call-time
+  // so it's always up to date.
+  const handler: Record<string, Omit<AuthUser, 'id'> & { password: string; permissions: string[] }> = {};
+  return new Proxy(handler, {
+    get(_target, prop: string) {
+      const { users, credentials } = useUserStore.getState();
+      const user = users.find((u) => u.email.toLowerCase().trim() === prop.toLowerCase());
+      if (!user) return undefined;
+      return {
+        password: credentials[prop.toLowerCase()] || '',
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        role: user.role,
+        mfaEnabled: user.mfaEnabled,
+        businessId: 'biz_001',
+        businessName: 'My Business',
+        branchId: user.branchId || 'br_001',
+        branchName: user.branchName || 'Main Branch',
+        permissions: user.permissions,
+      };
+    },
+    ownKeys() {
+      const { users } = useUserStore.getState();
+      return users.map((u) => u.email.toLowerCase().trim());
+    },
+    getOwnPropertyDescriptor(_target, prop: string) {
+      const { users } = useUserStore.getState();
+      const exists = users.some((u) => u.email.toLowerCase().trim() === prop.toLowerCase());
+      return exists ? { configurable: true, enumerable: true, value: undefined } : undefined;
+    },
+  });
+})();
 
 interface AuthState {
   user: AuthUser | null;
@@ -58,8 +76,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, loginError: null });
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    const account = DEMO_ACCOUNTS[email.toLowerCase().trim()];
-    if (!account || account.password !== password) {
+    // Read from the dynamic user store
+    const { users, credentials } = useUserStore.getState();
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = users.find((u) => u.email.toLowerCase().trim() === normalizedEmail);
+
+    if (!user || !user.isActive) {
+      set({ isLoading: false, loginError: 'Invalid email or password. Please try again.' });
+      return;
+    }
+
+    const storedPassword = credentials[normalizedEmail];
+    if (storedPassword !== password) {
       set({ isLoading: false, loginError: 'Invalid email or password. Please try again.' });
       return;
     }
@@ -68,18 +96,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: true,
       isLoading: false,
       loginError: null,
-      permissions: account.permissions,
+      permissions: user.permissions,
       user: {
-        id: `usr_${Date.now()}`,
-        email: account.email,
-        name: account.name,
-        phone: account.phone,
-        role: account.role,
-        mfaEnabled: account.mfaEnabled,
-        businessId: account.businessId,
-        businessName: account.businessName,
-        branchId: account.branchId,
-        branchName: account.branchName,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+        mfaEnabled: user.mfaEnabled,
+        businessId: 'biz_001',
+        businessName: 'My Business',
+        branchId: user.branchId || 'br_001',
+        branchName: user.branchName || 'Main Branch',
       },
     });
   },

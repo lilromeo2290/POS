@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Shield, Search, Plus, MoreHorizontal, Pencil, Trash2, UserPlus,
   ShieldCheck, Lock, Unlock, Mail, Phone, Building2, Clock,
@@ -12,6 +12,7 @@ import {
 import { cn, formatDateTime, getInitials, getStatusColor } from '@/lib/helpers';
 import type { SystemUser, UserRole, RoleDefinition, PermissionCategory } from '@/types';
 import { PERMISSION_CATEGORIES, ALL_PERMISSIONS } from '@/types';
+import { useUserStore } from '@/store/userStore';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -111,19 +112,6 @@ const BRANCHES = [
 ];
 
 // ============================================
-// MOCK USERS
-// ============================================
-const INITIAL_USERS: SystemUser[] = [
-  {
-    id: 'usr_001', name: 'Admin', email: 'admin@mybusiness.com',
-    phone: '', role: 'admin',
-    permissions: ALL_PERMISSIONS.map(p => p.id),
-    branchId: 'br_001', branchName: 'Main Branch',
-    mfaEnabled: false, isActive: true, lastLoginAt: new Date().toISOString(), createdAt: new Date().toISOString(),
-  },
-];
-
-// ============================================
 // MOCK ROLES
 // ============================================
 const INITIAL_ROLES: RoleDefinition[] = [
@@ -207,7 +195,7 @@ const INITIAL_ACTIVITY_LOG: ActivityLogEntry[] = [];
 // DEFAULT FORM
 // ============================================
 const defaultInviteForm = {
-  name: '', email: '', phone: '', role: 'cashier' as UserRole, branch: '', sendInviteEmail: true,
+  name: '', email: '', phone: '', password: 'password123', role: 'cashier' as UserRole, branch: '', sendInviteEmail: true,
   sections: [...ROLE_DEFAULT_SECTIONS.cashier],
 };
 
@@ -353,7 +341,16 @@ export default function UsersPage() {
   // ============================================
   // STATE
   // ============================================
-  const [users, setUsers] = useState<SystemUser[]>([...INITIAL_USERS]);
+  const { users: storeUsers, addUser: storeAddUser, updateUser: storeUpdateUser, removeUser: storeRemoveUser } = useUserStore();
+  const [localUsers, setLocalUsers] = useState<SystemUser[]>([]);
+
+  // Sync with store on mount and when store changes
+  useEffect(() => {
+    setLocalUsers([...storeUsers]);
+  }, [storeUsers]);
+
+  const users = localUsers;
+
   const [roles, setRoles] = useState<RoleDefinition[]>(INITIAL_ROLES.map((r) => ({ ...r, permissions: [...r.permissions] })));
   const [activityLog] = useState<ActivityLogEntry[]>([...INITIAL_ACTIVITY_LOG]);
 
@@ -442,12 +439,13 @@ export default function UsersPage() {
       role: inviteForm.role,
       permissions,
       branchId: inviteForm.branch || 'br_001',
-      branchName: branchObj?.name || 'Main Street Store',
+      branchName: branchObj?.name || 'Main Branch',
       mfaEnabled: false,
       isActive: true,
       createdAt: new Date().toISOString(),
     };
-    setUsers((prev) => [...prev, newUser]);
+    // Add to shared store (with password for login)
+    storeAddUser(newUser, inviteForm.password || 'password123');
     setIsInviteDialogOpen(false);
   };
 
@@ -470,21 +468,16 @@ export default function UsersPage() {
     if (!editingUser) return;
     const branchObj = BRANCHES.find((b) => b.id === editForm.branch);
     const permissions = sectionsToPermissions(editForm.sections);
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === editingUser.id
-          ? {
-              ...u,
-              role: editForm.role,
-              branchId: editForm.branch || u.branchId,
-              branchName: branchObj?.name || u.branchName,
-              mfaEnabled: editForm.mfaEnabled,
-              isActive: editForm.isActive,
-              permissions,
-            }
-          : u
-      )
-    );
+    const updates: Partial<SystemUser> = {
+      role: editForm.role,
+      branchId: editForm.branch || editingUser.branchId,
+      branchName: branchObj?.name || editingUser.branchName,
+      mfaEnabled: editForm.mfaEnabled,
+      isActive: editForm.isActive,
+      permissions,
+    };
+    // Update in shared store
+    storeUpdateUser(editingUser.id, updates);
     setIsEditDialogOpen(false);
     setEditingUser(null);
   };
@@ -500,11 +493,11 @@ export default function UsersPage() {
   const handleDeleteUser = () => {
     if (!deletingUser) return;
     if (deletingUser.isActive) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === deletingUser.id ? { ...u, isActive: false } : u))
-      );
+      // Deactivate instead of delete
+      storeUpdateUser(deletingUser.id, { isActive: false });
     } else {
-      setUsers((prev) => prev.filter((u) => u.id !== deletingUser.id));
+      // Permanently delete from shared store
+      storeRemoveUser(deletingUser.id);
     }
     setIsDeleteDialogOpen(false);
     setDeletingUser(null);
@@ -1173,6 +1166,17 @@ export default function UsersPage() {
                     placeholder="+1-555-0000"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite-password">Login Password</Label>
+                <Input
+                  id="invite-password"
+                  type="text"
+                  value={inviteForm.password}
+                  onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })}
+                  placeholder="Set login password"
+                />
+                <p className="text-[10px] text-muted-foreground">This password will be used to sign in. Default: password123</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
