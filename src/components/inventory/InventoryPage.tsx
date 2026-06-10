@@ -209,7 +209,7 @@ export default function InventoryPage() {
     if (editingProduct) {
       updateProduct(editingProduct.id, {
         name: productForm.name,
-        sku: productForm.sku,
+        sku: productForm.sku || editingProduct.sku || `SKU-${Date.now().toString(36).toUpperCase()}`,
         barcode: productForm.barcode || undefined,
         categoryId: productForm.categoryId,
         categoryName: cat?.name || '',
@@ -227,7 +227,7 @@ export default function InventoryPage() {
       const newProduct: Product = {
         id: `prod_${Date.now()}`,
         name: productForm.name,
-        sku: productForm.sku,
+        sku: productForm.sku || `SKU-${Date.now().toString(36).toUpperCase()}`,
         barcode: productForm.barcode || undefined,
         categoryId: productForm.categoryId,
         categoryName: cat?.name || '',
@@ -943,8 +943,8 @@ export default function InventoryPage() {
                   <Input id="prod-name" value={productForm.name} onChange={(e) => setProductForm((f) => ({ ...f, name: e.target.value }))} placeholder="Product name" />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
-                  <Label htmlFor="prod-sku">SKU *</Label>
-                  <Input id="prod-sku" value={productForm.sku} onChange={(e) => setProductForm((f) => ({ ...f, sku: e.target.value }))} placeholder="e.g. APL-IP15PM-256" />
+                  <Label htmlFor="prod-sku">SKU</Label>
+                  <Input id="prod-sku" value={productForm.sku} onChange={(e) => setProductForm((f) => ({ ...f, sku: e.target.value }))} placeholder="Auto-generated if left blank" />
                 </div>
               </div>
               <div>
@@ -1026,7 +1026,7 @@ export default function InventoryPage() {
             <Button variant="outline" onClick={() => setIsProductDialogOpen(false)}>Cancel</Button>
             <Button
               onClick={handleSaveProduct}
-              disabled={!productForm.name || !productForm.sku || !productForm.categoryId || !productForm.costPrice || !productForm.sellingPrice}
+              disabled={!productForm.name || !productForm.categoryId || !productForm.costPrice || !productForm.sellingPrice}
             >
               {editingProduct ? 'Save Changes' : 'Create Product'}
             </Button>
