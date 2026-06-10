@@ -5,7 +5,6 @@ import { useNavStore } from '@/store';
 import DashboardPage from '@/components/dashboard/DashboardPage';
 import PosTerminal from '@/components/pos/PosTerminal';
 import InventoryPage from '@/components/inventory/InventoryPage';
-import CustomersPage from '@/components/customers/CustomersPage';
 import EmployeesPage from '@/components/employees/EmployeesPage';
 import ReportsPage from '@/components/reports/ReportsPage';
 import SettingsPage from '@/components/settings/SettingsPage';
@@ -25,8 +24,6 @@ function PageContent() {
       return <InventoryPage />;
     case 'products':
       return <InventoryPage />;
-    case 'customers':
-      return <CustomersPage />;
     case 'suppliers':
       return <SuppliersPage />;
     case 'employees':

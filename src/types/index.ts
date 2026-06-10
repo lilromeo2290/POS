@@ -497,7 +497,6 @@ export type AppPage =
   | 'pos' 
   | 'inventory' 
   | 'products'
-  | 'customers' 
   | 'suppliers'
   | 'employees' 
   | 'users'

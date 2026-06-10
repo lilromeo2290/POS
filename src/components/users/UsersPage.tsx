@@ -68,7 +68,6 @@ const DASHBOARD_SECTIONS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', border: 'border-emerald-300 dark:border-emerald-700', permissions: ['dashboard.view', 'dashboard.analytics'] },
   { id: 'pos', label: 'POS Terminal', icon: ShoppingCart, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30', border: 'border-sky-300 dark:border-sky-700', permissions: ['pos.access', 'pos.refund', 'pos.discount', 'pos.hold'] },
   { id: 'inventory', label: 'Inventory & Products', icon: Package, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30', border: 'border-violet-300 dark:border-violet-700', permissions: ['inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete', 'inventory.transfer', 'inventory.adjust'] },
-  { id: 'customers', label: 'Customers', icon: Users, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/30', border: 'border-pink-300 dark:border-pink-700', permissions: ['customers.view', 'customers.create', 'customers.edit', 'customers.delete', 'customers.credit'] },
   { id: 'suppliers', label: 'Suppliers', icon: Truck, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-300 dark:border-orange-700', permissions: ['suppliers.view', 'suppliers.create', 'suppliers.edit', 'suppliers.purchase_orders'] },
   { id: 'employees', label: 'Employees', icon: UserCog, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-100 dark:bg-cyan-900/30', border: 'border-cyan-300 dark:border-cyan-700', permissions: ['employees.view', 'employees.create', 'employees.edit', 'employees.schedule', 'employees.salary'] },
   { id: 'users', label: 'Users & Roles', icon: Shield, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', border: 'border-red-300 dark:border-red-700', permissions: ['users.view', 'users.create', 'users.edit', 'users.delete', 'users.roles'] },
@@ -83,9 +82,9 @@ const DASHBOARD_SECTIONS = [
 const ROLE_DEFAULT_SECTIONS: Record<UserRole, string[]> = {
   super_admin: DASHBOARD_SECTIONS.map(s => s.id),
   admin: DASHBOARD_SECTIONS.map(s => s.id),
-  manager: ['dashboard', 'pos', 'inventory', 'customers', 'suppliers', 'employees', 'transactions', 'reports', 'settings'],
-  cashier: ['dashboard', 'pos', 'inventory', 'customers', 'transactions', 'reports'],
-  viewer: ['dashboard', 'inventory', 'customers', 'suppliers', 'transactions', 'reports', 'settings'],
+  manager: ['dashboard', 'pos', 'inventory', 'suppliers', 'employees', 'transactions', 'reports', 'settings'],
+  cashier: ['dashboard', 'pos', 'inventory', 'transactions', 'reports'],
+  viewer: ['dashboard', 'inventory', 'suppliers', 'transactions', 'reports', 'settings'],
 };
 
 // ============================================
